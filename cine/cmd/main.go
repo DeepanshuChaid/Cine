@@ -29,6 +29,7 @@ func main () {
   })
 
   router.GET("/movies", moviecontroller.GetAllMovies())
+  router.GET("/movies/:id", moviecontroller.GetMovie())
 
   PORT := os.Getenv("PORT")
 
