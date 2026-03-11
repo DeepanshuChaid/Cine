@@ -192,13 +192,16 @@ func CreateMovie() gin.HandlerFunc {
     // Insert genres and movie_genres relation
     for _, g := range movie.Genre {
 
-      _, err = tx.Exec(ctx,
-        `INSERT INTO genres (genreid, genrename)
-         VALUES ($1,$2)
-         ON CONFLICT (genreid) DO NOTHING`,
-        g.Genreid,
-        g.Genrename,
-      )
+      var genreID string
+
+      err = tx.QueryRow(ctx,
+      `INSERT INTO genres (genrename)
+       VALUES ($1)
+       ON CONFLICT (genrename)
+       DO UPDATE SET genrename = EXCLUDED.genrename
+       RETURNING genreid`,
+       g.Genrename,
+      ).Scan(&genreID)
 
       if err != nil {
         c.JSON(500, gin.H{
@@ -209,10 +212,10 @@ func CreateMovie() gin.HandlerFunc {
       }
 
       _, err = tx.Exec(ctx,
-        `INSERT INTO movie_genres (movie_id, genre_id)
-         VALUES ($1,$2)`,
-        movie.ID,
-        g.Genreid,
+      `INSERT INTO movie_genres (movie_id, genre_id)
+       VALUES ($1,$2)`,
+       movie.ID,
+       genreID,
       )
 
       if err != nil {
