@@ -12,12 +12,11 @@ import (
 var Pool *pgxpool.Pool
 
 func Connect() {
-
   databaseUrl := os.Getenv("DATABASE_URL")
 
   config, err := pgxpool.ParseConfig(databaseUrl)
   if err != nil {
-    log.Fatal(err)
+    log.Fatal("Invalid database config:", err)
   }
 
   config.MaxConns = 10
@@ -25,12 +24,10 @@ func Connect() {
   config.MaxConnLifetime = time.Hour
 
   pool, err := pgxpool.NewWithConfig(context.Background(), config)
-
   if err != nil {
     log.Fatal("Unable to connect to database:", err)
   }
 
   Pool = pool
-
-  log.Println("Database connected")
+  log.Println("Connected to database")
 }

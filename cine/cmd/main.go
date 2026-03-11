@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+  "os"
 
 	moviecontroller "github.com/DeepanshuChaid/Cine/tree/main/cine/controllers/movieController"
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/database"
@@ -29,7 +30,9 @@ func main () {
 
   router.GET("/movies", moviecontroller.GetAllMovies())
 
-  if err := router.Run(":3000"); err != nil {
+  PORT := os.Getenv("PORT")
+
+  if err := router.Run(":" + PORT); err != nil {
     fmt.Println("Error starting server:", err)
   }
   

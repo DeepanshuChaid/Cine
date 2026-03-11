@@ -14,7 +14,7 @@ func InitSchema() {
     email TEXT UNIQUE NOT NULL
   );
   `
-
+  
   _, err := Pool.Exec(context.Background(), query)
 
   if err != nil {
