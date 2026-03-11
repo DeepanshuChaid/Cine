@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
-  "os"
+	"os"
 
 	moviecontroller "github.com/DeepanshuChaid/Cine/tree/main/cine/internal/controllers/movieController"
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
@@ -11,31 +11,31 @@ import (
 	"github.com/joho/godotenv"
 )
 
-func main () {
+func main() {
 
-  err := godotenv.Load()
+	err := godotenv.Load()
 
-  if err != nil {
-    log.Println(".env not found")
-  }
+	if err != nil {
+		log.Println(".env not found")
+	}
 
-  database.Connect()
-  database.InitSchema()
+	database.Connect()
+	database.InitSchema()
 
-  router := gin.Default()
+	router := gin.Default()
 
-  router.GET("/", func(c *gin.Context) {
-    c.String(200, "Hello World")
-  })
+	router.GET("/", func(c *gin.Context) {
+		c.String(200, "Hello World")
+	})
 
-  router.GET("/movies", moviecontroller.GetAllMovies())
-  router.GET("/movies/:id", moviecontroller.GetMovie())
+	router.GET("/movies", moviecontroller.GetAllMovies())
+	router.GET("/movies/:id", moviecontroller.GetMovie())
+	router.POST("/create/movie", moviecontroller.CreateMovie())
 
-  PORT := os.Getenv("PORT")
+	PORT := os.Getenv("PORT")
 
-  if err := router.Run(":" + PORT); err != nil {
-    fmt.Println("Error starting server:", err)
-  }
-  
+	if err := router.Run(":" + PORT); err != nil {
+		fmt.Println("Error starting server:", err)
+	}
+
 }
-

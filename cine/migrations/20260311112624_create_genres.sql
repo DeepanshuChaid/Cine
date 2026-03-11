@@ -1,6 +1,6 @@
 -- +goose Up
 CREATE TABLE genres (
-    genreid UUID PRIMARY KEY,
+    genreid UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     genrename TEXT NOT NULL
 );
 

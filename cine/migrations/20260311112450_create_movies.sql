@@ -1,6 +1,8 @@
 -- +goose Up
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+
 CREATE TABLE movies (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     imdbid TEXT NOT NULL,
     title TEXT NOT NULL,
     posterpath TEXT NOT NULL,
