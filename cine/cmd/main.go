@@ -5,8 +5,8 @@ import (
 	"log"
   "os"
 
-	moviecontroller "github.com/DeepanshuChaid/Cine/tree/main/cine/controllers/movieController"
-	"github.com/DeepanshuChaid/Cine/tree/main/cine/database"
+	moviecontroller "github.com/DeepanshuChaid/Cine/tree/main/cine/internal/controllers/movieController"
+	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )

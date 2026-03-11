@@ -2,10 +2,10 @@ package moviecontroller
 
 import (
   "context"
-  "log"
+  // "log"
   "time"
   "github.com/gin-gonic/gin"  
-  "github.com/DeepanshuChaid/Cine/tree/main/cine/models"
+  "github.com/DeepanshuChaid/Cine/tree/main/cine/internal/models"
 )
 
 func GetAllMovies() gin.HandlerFunc {

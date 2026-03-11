@@ -1,4 +1,4 @@
-,package models
+package models
 
 type Genre struct {
   Genreid   string `json:"genreid" validate:"required"`
