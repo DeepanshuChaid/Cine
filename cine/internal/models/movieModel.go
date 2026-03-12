@@ -11,7 +11,7 @@ type Ranking struct {
 }
 
 type Movie struct {
-  ID          string  `json:"id"`
+  ID          string  `json:"id,omitempty"`
   Imdbid      string  `json:"imdbid" validate:"required"`
   Title       string  `json:"title" validate:"required,min=2,max=255"`
   Posterpath  string  `json:"posterpath" validate:"required,url"`
