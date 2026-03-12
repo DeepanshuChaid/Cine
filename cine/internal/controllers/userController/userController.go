@@ -1,16 +1,17 @@
 package usercontroller
 
 import (
-  "context"
-  "net/http" // FIX: use HTTP status constants instead of raw numbers
-  "time"
+	"context"
+	"errors"
+	"net/http" // FIX: use HTTP status constants instead of raw numbers
+	"time"
 
-  "github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
-  "github.com/DeepanshuChaid/Cine/tree/main/cine/internal/models"
-  "github.com/gin-gonic/gin"
-  "github.com/go-playground/validator/v10"
-  "github.com/jackc/pgx/v5"
-  "golang.org/x/crypto/bcrypt"
+	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
+	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/models"
+	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
+	"github.com/jackc/pgx/v5"
+	"golang.org/x/crypto/bcrypt"
 )
 
 // VADLIDATOR VARIABLE
@@ -57,7 +58,7 @@ func Register() gin.HandlerFunc {
       Scan(&user.ID)
 
     if err != nil {
-      if err != pgx.ErrNoRows {
+      if errors.Is(err, pgx.ErrNoRows) {
         c.JSON(http.StatusInternalServerError, gin.H{
           "error":   "Database error",
           "details": err.Error(),
