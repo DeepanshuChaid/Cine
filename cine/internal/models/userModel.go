@@ -14,5 +14,5 @@ type User struct {
 	Token        string `json:"token"`
 	Refreshtoken string `json:"refreshtoken"`
 
-	FavouriteGeneres []Genre
+	FavouriteGeneres []Genre `json:"favouritegeneres"`
 }
