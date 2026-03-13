@@ -40,6 +40,11 @@ func main() {
 
 	PORT := os.Getenv("PORT")
 
+	router.Use(cors.New(cors.Config{
+			AllowOrigins: []string{"http://localhost:3000"},
+			AllowCredentials: true,
+	}))
+
 	if err := router.Run(":" + PORT); err != nil {
 		fmt.Println("Error starting server:", err)
 	}

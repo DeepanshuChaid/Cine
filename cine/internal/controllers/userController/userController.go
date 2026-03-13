@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"net/http" // FIX: use HTTP status constants instead of raw numbers
+	"os"
 	"time"
 
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
@@ -215,14 +216,36 @@ func Login() gin.HandlerFunc {
       return
     }
 
+    secure := os.Getenv("PRODUCTION") == "true"
+    
+    c.SetSameSite(http.SameSiteLaxMode)
+
+    c.SetCookie(
+      "access_token",   // name
+      token,            // value
+      3600,             // max age (seconds)
+      "/",              // path
+      "",               // domain
+      secure,            // secure (true in production HTTPS)
+      true,             // httpOnly
+    )
+
+    c.SetCookie(
+      "refresh_token",
+      refreshToken,
+      86400*7,          // 7 days
+      "/",
+      "",
+      secure,
+      true,
+    )
+
 
     c.JSON(http.StatusOK, models.FoundUser{
       UserId: foundUser.UserId,
       Username: foundUser.Username,
       Email: foundUser.Email,
       Role: foundUser.Role,
-      Token: token,
-      Refreshtoken: refreshToken,
       Favouritegeneres: foundUser.Favouritegeneres,
     })
     
