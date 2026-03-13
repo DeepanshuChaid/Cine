@@ -1,8 +1,9 @@
 package utils
 
 import (
+	"context"
+	"errors"
 	"os"
-  "context"
 	"time"
 
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
@@ -82,4 +83,27 @@ func UpdateAllTokens(userId, token, refreshToken string)(err error) {
     )
 
     return err
+}
+
+
+func ValidateToken(signedToken string) (*SignedDetails, error) {
+
+  token, err := jwt.ParseWithClaims(
+    signedToken,
+    &SignedDetails{},
+    func(token *jwt.Token) (interface{}, error) {
+      return SECRET_KEY, nil
+    },
+  )
+
+  if err != nil {
+    return nil, err
+  }
+
+  claims, ok := token.Claims.(*SignedDetails)
+  if !ok || !token.Valid {
+    return nil, errors.New("invalid token")
+  }
+
+  return claims, nil
 }

@@ -252,3 +252,17 @@ func Login() gin.HandlerFunc {
     
   }
 }
+
+
+// LOGOUT
+func Logout() gin.HandlerFunc {
+  return func(c *gin.Context) {
+
+    c.SetCookie("access_token", "", -1, "/", "", true, true)
+    c.SetCookie("refresh_token", "", -1, "/", "", true, true)
+
+    c.JSON(200, gin.H{
+      "message": "Logged out successfully",
+    })
+  }
+}
