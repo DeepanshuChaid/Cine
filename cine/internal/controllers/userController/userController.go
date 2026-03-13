@@ -95,7 +95,7 @@ func Register() gin.HandlerFunc {
 
     if err != nil {
       c.JSON(http.StatusInternalServerError, gin.H{
-        "error":   "Failed to create user",
+        "error":   "User already Exists.",
         "details": err.Error(),
       })
       return
@@ -108,4 +108,50 @@ func Register() gin.HandlerFunc {
       "user":    user,
     })
   }
+}
+
+
+// LOGIN
+func Login() gin.HandlerFunc {
+  return func(c *gin.Context) {
+    ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+    defer cancel()
+
+    var user models.UserLogin
+    var userResponse models.UserResponse
+
+    if err := c.ShouldBindJSON(&user); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{
+        "error":   "Invalid request body",
+        "details": err.Error(),
+      })
+      return
+    }
+
+    err := database.Pool.QueryRow(ctx, "SELECT id, username, email, password, role FROM users WHERE email = $1", user.Email).Scan(&userResponse.UserId, &userResponse.Username, &userResponse.Email, &user.Password,)
+
+  if err != nil {
+    if errors.Is(err, pgx.ErrNoRows) {
+      c.JSON(http.StatusUnauthorized, gin.H{
+        "error": "User not found. Please Register!",
+      })
+      return
+    }
+    c.JSON(http.StatusInternalServerError, gin.H{
+      "error":   "Database error",
+      "details": err.Error(),
+    })
+    return
+  } 
+
+    err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userResponse.Password))
+    if err != nil {
+      c.JSON(http.StatusUnauthorized, gin.H{
+        "error": "Invalid password",
+      })
+      return
+    }
+    
+
+  
 }
