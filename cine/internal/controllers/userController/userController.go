@@ -55,22 +55,21 @@ func Register() gin.HandlerFunc {
 
     // check if user already exists
     err := database.Pool.
-      QueryRow(ctx, "SELECT id FROM users WHERE email = $1", user.Email).
-      Scan(&user.ID)
+    QueryRow(ctx, "SELECT id FROM users WHERE email = $1", user.Email).
+    Scan(&user.ID)
 
-    if err != nil {
-      if errors.Is(err, pgx.ErrNoRows) {
-        c.JSON(http.StatusInternalServerError, gin.H{
-          "error":   "Database error",
-          "details": err.Error(),
+    if err == nil {
+        c.JSON(http.StatusBadRequest, gin.H{
+            "error": "User already exists",
         })
         return
-      }
-    } else {
-      c.JSON(http.StatusBadRequest, gin.H{
-        "error": "User already exists",
-      })
-      return
+    }
+
+    if !errors.Is(err, pgx.ErrNoRows) {
+        c.JSON(http.StatusInternalServerError, gin.H{
+            "error": "Database error",
+        })
+        return
     }
 
     hashedPassword, err := HashPassword(user.Password)
@@ -137,14 +136,17 @@ func Login() gin.HandlerFunc {
       return
     }
 
-    err := database.Pool.QueryRow(ctx, "SELECT id, username, email, password, role, favouritegeneres FROM users WHERE email = $1", RequestData.Email).Scan(
+    err := database.Pool.QueryRow(
+      ctx,
+      "SELECT id, username, email, password, role FROM users WHERE email = $1",
+      RequestData.Email,
+    ).Scan(
       &foundUser.UserId,
       &foundUser.Username,
       &foundUser.Email,
       &foundUser.Password,
       &foundUser.Role,
-      &foundUser.Favouritegeneres,
-      )
+    )
     if err != nil {
       if errors.Is(err, pgx.ErrNoRows) {
         c.JSON(http.StatusNotFound, gin.H{
@@ -159,6 +161,33 @@ func Login() gin.HandlerFunc {
       })
       return
     }
+
+    rows, err := database.Pool.Query(ctx,
+      "SELECT genre_id FROM user_favourite_genres WHERE user_id=$1",
+      foundUser.UserId,
+    )
+    if err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{
+          "error": "Database error",
+      })
+      return
+    }
+    defer rows.Close()
+
+    var genres []string
+
+    for rows.Next() {
+      var genreID string
+      if err := rows.Scan(&genreID); err != nil {
+          c.JSON(http.StatusInternalServerError, gin.H{
+              "error": "Error scanning genres",
+          })
+          return
+      }
+      genres = append(genres, genreID)
+    }
+
+    foundUser.Favouritegeneres = genres
 
     err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(RequestData.Password))
     if err != nil {

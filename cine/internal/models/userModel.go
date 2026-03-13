@@ -30,5 +30,5 @@ type FoundUser struct {
 	Role             string  `json:"role"`
 	Token            string  `json:"token"`
 	Refreshtoken     string  `json:"refreshtoken"`
-	Favouritegeneres []Genre `json:"favouritegeneres"`
+	Favouritegeneres []string `json:"favouritegeneres"`
 }
