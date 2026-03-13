@@ -18,10 +18,10 @@ type SignedDetails struct {
   jwt.RegisteredClaims
 }
 
-var SECRET_KEY string = os.Getenv("SECRET_KEY")
-var SECRET_REFRESH_KEY string = os.Getenv("SECRET_REFRESH_KEY")
-
 func GenerateAllTokens(email, username, role, userid string) (string, string, error) {
+  SECRET_KEY := os.Getenv("SECRET_KEY")
+  SECRET_REFRESH_KEY := os.Getenv("SECRET_REFRESH_KEY")
+   
   claims := &SignedDetails{
     Email: email,
     Username: username,
