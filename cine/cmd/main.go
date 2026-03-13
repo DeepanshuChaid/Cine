@@ -21,7 +21,6 @@ func main() {
 	}
 
 	database.Connect()
-	database.InitSchema()
 
 	router := gin.Default()
 
