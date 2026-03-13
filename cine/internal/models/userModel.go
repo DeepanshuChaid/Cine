@@ -17,16 +17,18 @@ type User struct {
 	Favouritegeneres []Genre `json:"favouritegeneres"`
 }
 
-
 type UserLogin struct {
 	Email    string `json:"email" validate:"required,email"`
 	Password string `json:"password" validate:"required,min=8,max=255"`
 }
 
-type UserResponse struct {
-	UserId string `json:"userid"`
-	Username string `json:"username"`
-	Email string `json:"email"`
-	Role string `json:"role"`
+type FoundUser struct {
+	UserId           string  `json:"userid"`
+	Username         string  `json:"username"`
+	Email            string  `json:"email"`
+	Password         string  `json:"password"`
+	Role             string  `json:"role"`
+	Token            string  `json:"token"`
+	Refreshtoken     string  `json:"refreshtoken"`
 	Favouritegeneres []Genre `json:"favouritegeneres"`
 }

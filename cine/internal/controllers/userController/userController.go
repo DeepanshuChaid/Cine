@@ -8,6 +8,7 @@ import (
 
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/models"
+	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/jackc/pgx/v5"
@@ -117,10 +118,10 @@ func Login() gin.HandlerFunc {
     ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
     defer cancel()
 
-    var user models.UserLogin
-    var userResponse models.UserResponse
+    var RequestData models.UserLogin
+    var foundUser models.FoundUser
 
-    if err := c.ShouldBindJSON(&user); err != nil {
+    if err := c.ShouldBindJSON(&RequestData); err != nil {
       c.JSON(http.StatusBadRequest, gin.H{
         "error":   "Invalid request body",
         "details": err.Error(),
@@ -128,30 +129,74 @@ func Login() gin.HandlerFunc {
       return
     }
 
-    err := database.Pool.QueryRow(ctx, "SELECT id, username, email, password, role FROM users WHERE email = $1", user.Email).Scan(&userResponse.UserId, &userResponse.Username, &userResponse.Email, &user.Password,)
-
-  if err != nil {
-    if errors.Is(err, pgx.ErrNoRows) {
-      c.JSON(http.StatusUnauthorized, gin.H{
-        "error": "User not found. Please Register!",
+    if err := validate.Struct(RequestData); err != nil {
+      c.JSON(http.StatusBadRequest, gin.H{
+        "error":   "Validation failed",
+        "details": err.Error(),
       })
       return
     }
-    c.JSON(http.StatusInternalServerError, gin.H{
-      "error":   "Database error",
-      "details": err.Error(),
-    })
-    return
-  } 
 
-    err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(userResponse.Password))
+    err := database.Pool.QueryRow(ctx, "SELECT id, username, email, password, role, favouritegeneres FROM users WHERE email = $1", RequestData.Email).Scan(
+      &foundUser.UserId,
+      &foundUser.Username,
+      &foundUser.Email,
+      &foundUser.Password,
+      &foundUser.Role,
+      &foundUser.Favouritegeneres,
+      )
+    if err != nil {
+      if errors.Is(err, pgx.ErrNoRows) {
+        c.JSON(http.StatusNotFound, gin.H{
+          "error": "User not found",
+        })
+        return
+      }
+
+      c.JSON(http.StatusInternalServerError, gin.H{
+        "error":   "Database error",
+        "details": err.Error(),
+      })
+      return
+    }
+
+    err = bcrypt.CompareHashAndPassword([]byte(foundUser.Password), []byte(RequestData.Password))
     if err != nil {
       c.JSON(http.StatusUnauthorized, gin.H{
         "error": "Invalid password",
       })
       return
     }
-    
 
-  
+    token, refreshToken, err := utils.GenerateAllTokens(foundUser.Email, foundUser.Username, foundUser.Role, foundUser.UserId)
+    if err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{
+        "error":   "Failed to generate tokens",
+        "details": err.Error(),
+      })
+      return
+    }
+
+    err = utils.UpdateAllTokens(foundUser.UserId, token, refreshToken)
+    if err != nil {
+      c.JSON(http.StatusInternalServerError, gin.H{
+        "error":   "Failed to update tokens",
+        "details": err.Error(),
+      })
+      return
+    }
+
+
+    c.JSON(http.StatusOK, models.FoundUser{
+      UserId: foundUser.UserId,
+      Username: foundUser.Username,
+      Email: foundUser.Email,
+      Role: foundUser.Role,
+      Token: token,
+      Refreshtoken: refreshToken,
+      Favouritegeneres: foundUser.Favouritegeneres,
+    })
+    
+    
+  }
 }

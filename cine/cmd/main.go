@@ -36,6 +36,7 @@ func main() {
 
 	// USER ROUTES
 	router.POST("/register", usercontroller.Register())
+	router.POST("/login", usercontroller.Login())
 
 	PORT := os.Getenv("PORT")
 
