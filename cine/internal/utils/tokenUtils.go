@@ -87,14 +87,11 @@ func UpdateAllTokens(userId, token, refreshToken string)(err error) {
 
 
 func ValidateToken(signedToken string) (*SignedDetails, error) {
+  jwtSecret := os.Getenv("SECRET_KEY")
 
-  token, err := jwt.ParseWithClaims(
-    signedToken,
-    &SignedDetails{},
-    func(token *jwt.Token) (interface{}, error) {
-      return SECRET_KEY, nil
-    },
-  )
+  token, err := jwt.ParseWithClaims(signedToken, &SignedDetails{}, func(token *jwt.Token) (interface{}, error) {
+      return []byte(jwtSecret), nil
+  })
 
   if err != nil {
     return nil, err
