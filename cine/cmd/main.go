@@ -36,6 +36,7 @@ func main() {
 	// MOVIE ROUTES
   auth.GET("/movies", moviecontroller.GetAllMovies())
 	auth.GET("/movies/:id", moviecontroller.GetMovie())
+	auth.GET("/recommended", moviecontroller.GetRecommendedMovies())
 	auth.POST("/create/movie", moviecontroller.CreateMovie())
 
 	// USER ROUTES

@@ -2,7 +2,6 @@ package moviecontroller
 
 import (
 	"context"
-	"errors"
 	"net/http"
 	"time"
 
@@ -11,6 +10,7 @@ import (
 
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/models"
+	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -239,39 +239,42 @@ func CreateMovie() gin.HandlerFunc {
 }
 
 // ADMIN REVIEW AND UPDATE
-func AdminReviewUpdate() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		movieId := c.Param("id")
+// func AdminReviewUpdate() gin.HandlerFunc {
+// 	return func(c *gin.Context) {
+// 		movieId := c.Param("id")
 
-		if movieId == "" {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": "Movie ID is required",
-			})
-			return
-		}
-		var req struct {
-			Adminreview string `json:"adminreview" validate:"required"`
-		}
+// 		if movieId == "" {
+// 			c.JSON(http.StatusBadRequest, gin.H{
+// 				"error": "Movie ID is required",
+// 			})
+// 			return
+// 		}
+// 		var req struct {
+// 			Adminreview string `json:"adminreview" validate:"required"`
+// 		}
 
-		var resp struct {
-			RankingName string `json:"rankingname" validate:"required"`
-			AdminReview int    `json:"adminreview" validate:"required"`
-		}
+// 		var resp struct {
+// 			RankingName string `json:"rankingname" validate:"required"`
+// 			AdminReview int    `json:"adminreview" validate:"required"`
+// 		}
 
-    if err := c.ShouldBindJSON(&req); err != nil {
-      c.JSON(http.StatusBadRequest, gin.H{
-        "error": "Invalid request body",
-      })
-      return
-    }
+//     if err := c.ShouldBindJSON(&req); err != nil {
+//       c.JSON(http.StatusBadRequest, gin.H{
+//         "error": "Invalid request body",
+//       })
+//       return
+//     }
 
-    validate := 
+//     validate := 
 
-	}
-}
+// 	}
+// }
 
 func GetRecommendedMovies() gin.HandlerFunc {
 	return func(c *gin.Context) {
+		ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+		defer cancel()
+		
 		userId, err := utils.GetUserIdFromContext(c)
 		if err != nil {
 			c.JSON(http.StatusUnauthorized, gin.H{
@@ -281,77 +284,100 @@ func GetRecommendedMovies() gin.HandlerFunc {
 		}
 
 		favGenres, err := utils.GetUserFavGenresFromContext(userId, c)
-
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{
 				"error": "Failed to fetch user's favorite genres",
-				"details": err.Error()
+				"details": err.Error(),
 			})
 			return
 		}
 
-		// var recommendedMovieLimitValue init 64 = 3
-
-		// rerecommendedMovieLimitString := 5
-
 		var movies []models.Movie
-		
-		for _, genre := range favGenres {
-			err :=  database.Pool.Query(ctx, "SELECT id, imdbid, title, posterpath, youtubeid, adminreview FROM movies WHERE genre = $1", genre).Scan(&movies)
 
-			if err != nil{
+		for _, genre := range favGenres {
+
+			rows, err := database.Pool.Query(
+				ctx,
+				`SELECT id, imdbid, title, posterpath, youtubeid, adminreview 
+				FROM movies 
+				WHERE genre = $1`,
+				genre,
+			)
+
+			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
-					"error": "Failed to fetch movies. OR MAYBE DEV SUCKS AND CANNOT MAKE A SIMPLE API",
+					"error": "Failed to fetch movies",
 					"details": err.Error(),
 				})
 				return
+			}
+
+			defer rows.Close()
+
+			for rows.Next() {
+				var movie models.Movie
+
+				err := rows.Scan(
+					&movie.ID,
+					&movie.Imdbid,
+					&movie.Title,
+					&movie.Posterpath,
+					&movie.Youtubeid,
+					&movie.Adminreview,
+				)
+
+				if err != nil {
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"error": "Failed to scan movie",
+						"details": err.Error(),
+					})
+					return
+				}
+
+				movies = append(movies, movie)
 			}
 		}
 
 		c.JSON(http.StatusOK, gin.H{
 			"message": "Successfully fetched recommended movies",
 			"movies": movies,
-		}
+		})
 	}
 }
 
 
 
-
-
-
-
 // I AM NOT GONNA WRITE THESE FUNCTIONS FOR NOW CUZ NO-ONE CARES
-func GetReviewRanking(admin_review string) (string, int, error) {
+// func GetReviewRanking(admin_review string) (string, int, error) {
   
-}
+// }
 
 
 
-func GetRankings() ([]models.Ranking, error) {
-  var rankings []models.Ranking
+// func GetRankings() ([]models.Ranking, error) {
+//   var rankings []models.Ranking
 
-  var ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
-  defer cancel()
+//   var ctx, cancel = context.WithTimeout(context.Background(), 10*time.Second)
+//   defer cancel()
 
-  rows, err := database.Pool.Query(ctx, "SELECT rankingvalue, rankingname FROM rankings")
-  if err != nil {
-    return nil, err
-  }
+//   rows, err := database.Pool.Query(ctx, "SELECT rankingvalue, rankingname FROM rankings")
+//   if err != nil {
+//     return nil, err
+//   }
 
-  defer rows.Close()
+//   defer rows.Close()
 
-  for rows.Next() {
-    var ranking models.Ranking
+//   for rows.Next() {
+//     var ranking models.Ranking
 
-    err = rows.Scan(&ranking.Rankingvalue, &ranking.Rankingname)
-    if err != nil {
-      return nil, err
-    }
+//     err = rows.Scan(&ranking.Rankingvalue, &ranking.Rankingname)
+//     if err != nil {
+//       return nil, err
+//     }
 
-    rankings = append(rankings, ranking)
-  }
+//     rankings = append(rankings, ranking)
+//   }
 
 
   
-}
+// }
