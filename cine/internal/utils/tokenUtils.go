@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/DeepanshuChaid/Cine/tree/main/cine/internal/database"
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -103,4 +104,47 @@ func ValidateToken(signedToken string) (*SignedDetails, error) {
   }
 
   return claims, nil
+}
+
+
+// GET USER ID FROM CONTEXT
+func GetUserIdFromContext(c *gin.Context)(string, error) {
+  userId, exists := c.Get("user_id")
+  if !exists {
+    return "", errors.New("user ID not found in context")
+  }
+
+  id, ok := userId.(string)
+  if !ok {
+    return "", errors.New("user ID is not a string")
+  }
+
+  return id, nil
+}
+
+// GET USER FAV GENRES FROM CONTEXT
+func GetUserFavGenresFromContext(userId string,c *gin.Context)([]string, error) {
+  ctx, cancel := context.WithTimeout(c.Request.Context(), 10*time.Second)
+  defer cancel()
+
+  var genres []string
+  rows, err := database.Pool.Query(ctx, "SELECT genre_id FROM user_favourite_genres WHERE user_id = $1", userId)
+  
+  if err != nil {
+    return nil, err
+  }
+
+  defer rows.Close()
+
+
+  for rows.Next() {
+    var genreID string
+    if err := rows.Scan(&genreID); err != nil {
+      return nil, err
+    }
+
+    genres = append(genres, genreID)
+  }
+
+  return genres, nil
 }
